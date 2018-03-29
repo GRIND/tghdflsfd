@@ -69,6 +69,60 @@ const orderChangeStatus = function(status, order_id){
     })
 }
 
+const dbSchemaCreate = function(){
+    db_pool.getConnection(function(err, connection) {
+        let sql = 'SELECT 1 FROM tg_user LIMIT 1';
+        connection.query(sql, (error) => {
+            if (error){
+                sql = `CREATE TABLE tg_user (
+                    tg_user_id INT(11) NOT NULL,
+                    first_name VARCHAR(255) NULL DEFAULT NULL,
+                    username VARCHAR(255) NULL DEFAULT NULL,
+                    PRIMARY KEY (tg_user_id)
+            )
+                COLLATE='utf8_general_ci'
+                ENGINE=InnoDB`
+
+                connection.query(sql, (error) => {
+                    sql = `
+                    CREATE TABLE orders (
+                        id INT(11) NOT NULL AUTO_INCREMENT,
+                        tg_user_id INT(11) NOT NULL,
+                        category VARCHAR(50) NOT NULL,
+                        description MEDIUMTEXT NOT NULL,
+                        price INT(11) NOT NULL,
+                        state VARCHAR(50) NOT NULL,
+                        last_changed TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        PRIMARY KEY (id),
+                        INDEX FK_orders_tg_user (tg_user_id),
+                        CONSTRAINT FK_orders_tg_user FOREIGN KEY (tg_user_id) REFERENCES tg_user (tg_user_id) ON UPDATE NO ACTION ON DELETE NO ACTION
+                    )
+                    COLLATE='utf8_general_ci'
+                    ENGINE=InnoDB
+                    AUTO_INCREMENT=46`
+                    connection.query(sql, (error) => {
+                        sql = `
+                            CREATE TABLE order_states (
+                                order_id INT(11) NOT NULL,
+                                state VARCHAR(50) NOT NULL COLLATE 'latin1_swedish_ci',
+                                timest TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                INDEX FK_order_states_orders (order_id),
+                                CONSTRAINT FK_order_states_orders FOREIGN KEY (order_id) REFERENCES orders (id) ON UPDATE CASCADE ON DELETE CASCADE
+                            )
+                            COLLATE='utf8_general_ci'
+                            ENGINE=InnoDB`;
+                        connection.query(sql, () =>{
+                            connection.release();
+                        });
+                    })
+                })
+            }
+        })
+    })
+}
+
+dbSchemaCreate();
+
 const saveOrderToDB = function(tg_user, sess, callback){
     db_pool.getConnection(function(err, connection) {
         let sql = 'INSERT INTO tg_user SET ? ON DUPLICATE KEY UPDATE username=username AND first_name = first_name'
