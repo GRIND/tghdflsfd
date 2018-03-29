@@ -6,7 +6,7 @@ const Markup = require('telegraf/markup')
 const session = require('telegraf/session')
 const mysql = require('mysql')
 
-const YA_KASSA_PAYMENT_TOKEN = process.env.DB_HOST.YA_KASSA_TOKEN
+const YA_KASSA_PAYMENT_TOKEN = process.env.YA_KASSA_TOKEN
 
 const bot = new Telegraf(process.env.TG_BOT_TOKEN)
 
